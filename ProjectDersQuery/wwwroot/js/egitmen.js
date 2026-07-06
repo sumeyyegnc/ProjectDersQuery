@@ -1,4 +1,4 @@
-﻿$(document).ready(function () {
+$(document).ready(function () {
     listeYukle();
 
     $("#btnYeniEkle").click(function () {
@@ -20,12 +20,17 @@
         var id = $(this).data("id");
         sil(id);
     });
+    $("#btnSearch").click(function() {
+        var searchTerm = $("#txtSearch").val();
+        listeYukle(searchTerm);
+    });
 });
 
-function listeYukle() {
+function listeYukle(searchTerm = "") {
     $.ajax({
         url: "/Egitmen/GetAll",
         type: "GET",
+        data: { search: searchTerm },
         dataType: "json",
         success: function (data) {
             tabloyuDoldur(data);
@@ -37,6 +42,10 @@ function listeYukle() {
 }
 
 function tabloyuDoldur(data) {
+    if ($.fn.DataTable.isDataTable('#tblEgitmen')) {
+        $('#tblEgitmen').DataTable().destroy();
+    }
+
     var tbody = $("#tblEgitmen tbody");
     tbody.empty();
 
@@ -51,6 +60,17 @@ function tabloyuDoldur(data) {
             "</td>" +
             "</tr>";
         tbody.append(satir);
+    });
+
+    $('#tblEgitmen').DataTable({
+        dom: 'Brtip',
+        buttons: [
+            'excelHtml5',
+            'pdfHtml5'
+        ],
+        language: {
+            url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/tr.json"
+        }
     });
 }
 

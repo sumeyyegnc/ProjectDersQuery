@@ -1,43 +1,92 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using ProjectDersQuery.Data;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
 using ProjectDersQuery.Models;
-using System.Linq;
-
-
+using System.Collections.Generic;
 
 namespace ProjectDersQuery.Controllers
 {
+    [Authorize]
     public class EgitmenController : Controller
     {
-        private readonly EgitimDbContext context;
-        public EgitmenController(EgitimDbContext context)
+        private readonly string _connectionString;
+
+        public EgitmenController(IConfiguration configuration)
         {
-            this.context = context;
+            _connectionString = configuration.GetConnectionString("Default");
         }
-        // GET: Egitmen
-        // GET: Egitmen
+
         public IActionResult Index()
         {
             return View();
         }
 
-        // GET: Egitmen/GetAll
         [HttpGet]
-        public JsonResult GetAll()
+        public JsonResult GetAll(string search = null)
         {
-            var liste = context.Egitmenler.ToList();
+            var liste = new List<Egitmen>();
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var query = "SELECT * FROM Egitmenler";
+                if (!string.IsNullOrEmpty(search))
+                {
+                    query += " WHERE EgitmenAdi LIKE @search OR Brans LIKE @search";
+                }
+
+                using (var command = new SqlCommand(query, connection))
+                {
+                    if (!string.IsNullOrEmpty(search))
+                    {
+                        command.Parameters.AddWithValue("@search", "%" + search + "%");
+                    }
+
+                    connection.Open();
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            liste.Add(new Egitmen
+                            {
+                                EgitmenId = Convert.ToInt32(reader["EgitmenId"]),
+                                EgitmenAdi = reader["EgitmenAdi"].ToString(),
+                                Brans = reader["Brans"].ToString()
+                            });
+                        }
+                    }
+                }
+            }
             return Json(liste);
         }
 
-        // GET: Egitmen/GetById?id=5
         [HttpGet]
         public JsonResult GetById(int id)
         {
-            var kayit = context.Egitmenler.Find(id);
+            Egitmen kayit = null;
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var query = "SELECT * FROM Egitmenler WHERE EgitmenId = @id";
+                using (var command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@id", id);
+                    connection.Open();
+                    using (var reader = command.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            kayit = new Egitmen
+                            {
+                                EgitmenId = Convert.ToInt32(reader["EgitmenId"]),
+                                EgitmenAdi = reader["EgitmenAdi"].ToString(),
+                                Brans = reader["Brans"].ToString()
+                            };
+                        }
+                    }
+                }
+            }
             return Json(kayit);
         }
 
-        // POST: Egitmen/Create
         [HttpPost]
         public JsonResult Create(Egitmen egitmen)
         {
@@ -50,13 +99,21 @@ namespace ProjectDersQuery.Controllers
                 return Json(new { success = false, message = string.Join(" ", hatalar) });
             }
 
-            context.Egitmenler.Add(egitmen);
-            context.SaveChanges();
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var query = "INSERT INTO Egitmenler (EgitmenAdi, Brans) VALUES (@EgitmenAdi, @Brans)";
+                using (var command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@EgitmenAdi", egitmen.EgitmenAdi);
+                    command.Parameters.AddWithValue("@Brans", egitmen.Brans);
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                }
+            }
 
             return Json(new { success = true, message = "Eğitmen başarıyla eklendi." });
         }
 
-        // POST: Egitmen/Update
         [HttpPost]
         public JsonResult Update(Egitmen egitmen)
         {
@@ -69,31 +126,45 @@ namespace ProjectDersQuery.Controllers
                 return Json(new { success = false, message = string.Join(" ", hatalar) });
             }
 
-            var mevcut = context.Egitmenler.Find(egitmen.EgitmenId);
-            if (mevcut == null)
+            using (var connection = new SqlConnection(_connectionString))
             {
-                return Json(new { success = false, message = "Eğitmen bulunamadı." });
-            }
+                var query = "UPDATE Egitmenler SET EgitmenAdi = @EgitmenAdi, Brans = @Brans WHERE EgitmenId = @EgitmenId";
+                using (var command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@EgitmenAdi", egitmen.EgitmenAdi);
+                    command.Parameters.AddWithValue("@Brans", egitmen.Brans);
+                    command.Parameters.AddWithValue("@EgitmenId", egitmen.EgitmenId);
+                    connection.Open();
+                    int affected = command.ExecuteNonQuery();
 
-            mevcut.EgitmenAdi = egitmen.EgitmenAdi;
-            mevcut.Brans = egitmen.Brans;
-            context.SaveChanges();
+                    if (affected == 0)
+                    {
+                        return Json(new { success = false, message = "Eğitmen bulunamadı." });
+                    }
+                }
+            }
 
             return Json(new { success = true, message = "Eğitmen başarıyla güncellendi." });
         }
 
-        // POST: Egitmen/Delete
         [HttpPost]
         public JsonResult Delete(int id)
         {
-            var kayit = context.Egitmenler.Find(id);
-            if (kayit == null)  
+            using (var connection = new SqlConnection(_connectionString))
             {
-                return Json(new { success = false, message = "Eğitmen bulunamadı." });
-            }
+                var query = "DELETE FROM Egitmenler WHERE EgitmenId = @id";
+                using (var command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@id", id);
+                    connection.Open();
+                    int affected = command.ExecuteNonQuery();
 
-            context.Egitmenler.Remove(kayit);
-            context.SaveChanges();
+                    if (affected == 0)
+                    {
+                        return Json(new { success = false, message = "Eğitmen bulunamadı." });
+                    }
+                }
+            }
 
             return Json(new { success = true, message = "Eğitmen başarıyla silindi." });
         }

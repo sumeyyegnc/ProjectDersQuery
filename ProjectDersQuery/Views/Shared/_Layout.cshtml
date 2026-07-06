@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -21,6 +21,9 @@
     <!-- Theme CSS -->
     <link href="~/css/styles.css" rel="stylesheet" />
     <link href="~/css/site.css" rel="stylesheet" />
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"/>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css"/>
 
 </head>
 
@@ -58,7 +61,24 @@
                     <li class="nav-item"><a class="nav-link" href="/Home/Index">Ana Sayfa</a></li>
                     <li class="nav-item"><a class="nav-link" href="/Kurs/Index">Kurslar</a></li>
                     <li class="nav-item"><a class="nav-link" href="/Egitmen/Index">Egitmen Kadromuz</a></li>
-                   
+                    <li class="nav-item"><a class="nav-link" href="/Ogrenci/Index">Öğrenciler</a></li>
+
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <li class="nav-item">
+                            <span class="nav-link text-primary fw-bold">Merhaba, @User.Identity.Name</span>
+                        </li>
+                        <li class="nav-item">
+                            <form asp-controller="Account" asp-action="Logout" method="post" class="form-inline">
+                                <button type="submit" class="btn btn-link nav-link">Çıkış Yap</button>
+                            </form>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item"><a class="nav-link" href="/Account/Login">Giriş Yap</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/Account/Register">Kayıt Ol</a></li>
+                    }
                 </ul>
             </div>
         </div>
@@ -103,6 +123,14 @@
 
     <script src="~/js/site.js"></script>
     <script src="~/js/scripts.js"></script>
+
+    <!-- DataTables JS and Export Plugins -->
+    <script type="text/javascript" src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
 
     @RenderSection("Scripts", required: false)
 

@@ -1,12 +1,18 @@
-﻿@{
+@{
     ViewBag.Title = "Eğitmen Listesi";
 }
 
 <h2>Eğitmen Listesi</h2>
 
-<button type="button" class="btn btn-primary mb-3" id="btnYeniEkle">
-    <i class="fa fa-plus"></i> Yeni Eğitmen Ekle
-</button>
+<div class="d-flex justify-content-between mb-3">
+    <button type="button" class="btn btn-primary" id="btnYeniEkle">
+        <i class="fa fa-plus"></i> Yeni Eğitmen Ekle
+    </button>
+    <div class="input-group" style="width: 300px;">
+        <input type="text" id="txtSearch" class="form-control" placeholder="Eğitmen Ara...">
+        <button class="btn btn-outline-secondary" type="button" id="btnSearch">Ara</button>
+    </div>
+</div>
 
 <table class="table table-bordered table-striped" id="tblEgitmen">
     <thead>

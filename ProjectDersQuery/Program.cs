@@ -14,8 +14,15 @@ namespace ProjectDersQuery
                 .AddJsonOptions(options =>
                 {
                     options.JsonSerializerOptions.PropertyNamingPolicy = null;
-                }); builder.Services.AddDbContext<EgitimDbContext>(options => options.
-UseSqlServer(builder.Configuration.GetConnectionString("Default")));
+                }); 
+                
+            builder.Services.AddDbContext<EgitimDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
+
+            builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie(options =>
+                {
+                    options.LoginPath = "/Account/Login";
+                });
 
             var app = builder.Build();
 
@@ -32,6 +39,7 @@ UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllerRoute(

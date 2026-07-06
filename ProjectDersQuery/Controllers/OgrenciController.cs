@@ -1,40 +1,92 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using ProjectDersQuery.Data;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
 using ProjectDersQuery.Models;
+using System.Collections.Generic;
 
 namespace ProjectDersQuery.Controllers
 {
+    [Authorize]
     public class OgrenciController : Controller
     {
-        private readonly EgitimDbContext context;
-        public OgrenciController(EgitimDbContext context)
+        private readonly string _connectionString;
+
+        public OgrenciController(IConfiguration configuration)
         {
-            this.context = context;
+            _connectionString = configuration.GetConnectionString("Default");
         }
-        // GET: Ogrenci
-        // GET: Ogrenci
+
         public IActionResult Index()
         {
             return View();
         }
 
-        // GET: Ogrenci/GetAll
         [HttpGet]
-        public JsonResult GetAll()
+        public JsonResult GetAll(string search = null)
         {
-            var liste = context.Ogrenciler.ToList();
+            var liste = new List<Ogrenci>();
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var query = "SELECT * FROM Ogrenciler";
+                if (!string.IsNullOrEmpty(search))
+                {
+                    query += " WHERE AdSoyad LIKE @search OR Email LIKE @search";
+                }
+
+                using (var command = new SqlCommand(query, connection))
+                {
+                    if (!string.IsNullOrEmpty(search))
+                    {
+                        command.Parameters.AddWithValue("@search", "%" + search + "%");
+                    }
+
+                    connection.Open();
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            liste.Add(new Ogrenci
+                            {
+                                OgrenciId = Convert.ToInt32(reader["OgrenciId"]),
+                                AdSoyad = reader["AdSoyad"].ToString(),
+                                Email = reader["Email"].ToString()
+                            });
+                        }
+                    }
+                }
+            }
             return Json(liste);
         }
 
-        // GET: Ogrenci/GetById?id=5
         [HttpGet]
         public JsonResult GetById(int id)
         {
-            var kayit = context.Ogrenciler.Find(id);
+            Ogrenci kayit = null;
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var query = "SELECT * FROM Ogrenciler WHERE OgrenciId = @id";
+                using (var command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@id", id);
+                    connection.Open();
+                    using (var reader = command.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            kayit = new Ogrenci
+                            {
+                                OgrenciId = Convert.ToInt32(reader["OgrenciId"]),
+                                AdSoyad = reader["AdSoyad"].ToString(),
+                                Email = reader["Email"].ToString()
+                            };
+                        }
+                    }
+                }
+            }
             return Json(kayit);
         }
 
-        // POST: Ogrenci/Create
         [HttpPost]
         public JsonResult Create(Ogrenci ogrenci)
         {
@@ -47,13 +99,21 @@ namespace ProjectDersQuery.Controllers
                 return Json(new { success = false, message = string.Join(" ", hatalar) });
             }
 
-            context.Ogrenciler.Add(ogrenci);
-            context.SaveChanges();
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var query = "INSERT INTO Ogrenciler (AdSoyad, Email) VALUES (@AdSoyad, @Email)";
+                using (var command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@AdSoyad", ogrenci.AdSoyad);
+                    command.Parameters.AddWithValue("@Email", ogrenci.Email);
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                }
+            }
 
             return Json(new { success = true, message = "Öğrenci başarıyla eklendi." });
         }
 
-        // POST: Ogrenci/Update
         [HttpPost]
         public JsonResult Update(Ogrenci ogrenci)
         {
@@ -66,31 +126,45 @@ namespace ProjectDersQuery.Controllers
                 return Json(new { success = false, message = string.Join(" ", hatalar) });
             }
 
-            var mevcut = context.Ogrenciler.Find(ogrenci.OgrenciId);
-            if (mevcut == null)
+            using (var connection = new SqlConnection(_connectionString))
             {
-                return Json(new { success = false, message = "Öğrenci bulunamadı." });
-            }
+                var query = "UPDATE Ogrenciler SET AdSoyad = @AdSoyad, Email = @Email WHERE OgrenciId = @OgrenciId";
+                using (var command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@AdSoyad", ogrenci.AdSoyad);
+                    command.Parameters.AddWithValue("@Email", ogrenci.Email);
+                    command.Parameters.AddWithValue("@OgrenciId", ogrenci.OgrenciId);
+                    connection.Open();
+                    int affected = command.ExecuteNonQuery();
 
-            mevcut.AdSoyad = ogrenci.AdSoyad;
-            mevcut.Email = ogrenci.Email;
-            context.SaveChanges();
+                    if (affected == 0)
+                    {
+                        return Json(new { success = false, message = "Öğrenci bulunamadı." });
+                    }
+                }
+            }
 
             return Json(new { success = true, message = "Öğrenci başarıyla güncellendi." });
         }
 
-        // POST: Ogrenci/Delete
         [HttpPost]
         public JsonResult Delete(int id)
         {
-            var kayit = context.Ogrenciler.Find(id);
-            if (kayit == null)
+            using (var connection = new SqlConnection(_connectionString))
             {
-                return Json(new { success = false, message = "Öğrenci bulunamadı." });
-            }
+                var query = "DELETE FROM Ogrenciler WHERE OgrenciId = @id";
+                using (var command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@id", id);
+                    connection.Open();
+                    int affected = command.ExecuteNonQuery();
 
-            context.Ogrenciler.Remove(kayit);
-                context.SaveChanges();
+                    if (affected == 0)
+                    {
+                        return Json(new { success = false, message = "Öğrenci bulunamadı." });
+                    }
+                }
+            }
 
             return Json(new { success = true, message = "Öğrenci başarıyla silindi." });
         }
