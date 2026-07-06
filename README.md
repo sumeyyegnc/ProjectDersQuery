@@ -21,13 +21,14 @@ A simple **ASP.NET Core MVC** application for managing **Students, Courses, and 
 <img width="1920" height="1080" alt="Ekran Görüntüsü (109)" src="https://github.com/user-attachments/assets/3db55f17-0892-42b9-9866-a7e90365b967" />
 
 ###  Login
+<img width="1920" height="1080" alt="Ekran Görüntüsü (115)" src="https://github.com/user-attachments/assets/4ae27e0d-f516-4700-9c55-081e8772c6a3" />
 
 ### Students
-<img width="1920" height="1080" alt="Ekran Görüntüsü (111)" src="https://github.com/user-attachments/assets/6a148096-d4c0-4cd0-b67d-9f2f81ed5252" />
 
-###  Courses
-<img width="1920" height="1080" alt="Ekran Görüntüsü (112)" src="https://github.com/user-attachments/assets/f5d12b29-d13f-4943-b294-a5c71266fedc" />
+<img width="1920" height="1080" alt="Ekran Görüntüsü (111)" src="https://github.com/user-attachments/assets/c4c4caaa-c24a-41ca-afa1-bb65cf166814" />
 
-### Instructors
-<img width="1920" height="1080" alt="Ekran Görüntüsü (113)" src="https://github.com/user-attachments/assets/46df3fd5-3155-42fc-8a60-db77f85db998" />
+###  Student
+
+<img width="1920" height="1080" alt="Ekran Görüntüsü (112)" src="https://github.com/user-attachments/assets/f6d8ed47-033f-4dba-96d7-df22594152d0" />
+
 
